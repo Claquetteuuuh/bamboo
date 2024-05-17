@@ -48,7 +48,8 @@ export class MainServer {
                     }
                 }
             } catch (error) {
-                console.error('Error parsing JSON:', error);
+                LogHelper.error("Les infos reçu ne sont pas en JSON !")
+                // console.error('Error parsing JSON:', error);
             }
         });
 

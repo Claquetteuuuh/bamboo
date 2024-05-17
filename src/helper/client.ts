@@ -6,12 +6,12 @@ import { LogHelper } from "./log";
 import { config } from "../config/config";
 
 export class Client {
-  socket: Socket;
-  host: string;
-  port: number;
-  keys: RSAKeysType;
-  serverPublicKey?: RSAPublicKeyType;
-  onServerPublicKeyReceived?: () => void;
+  private socket: Socket;
+  private host: string;
+  private port: number;
+  private keys: RSAKeysType;
+  private serverPublicKey?: RSAPublicKeyType;
+  private onServerPublicKeyReceived?: () => void;
 
   constructor(host: string, port: number) {
     this.host = host;
@@ -21,7 +21,7 @@ export class Client {
     this.handleConsoleMessage();
   }
 
-  createSocketConnection(): Socket {
+  private createSocketConnection = (): Socket => {
     const socket = createConnection({ host: this.host, port: this.port }, () => {
       LogHelper.info('New client created.');
       LogHelper.info("Generating keys...");
@@ -61,7 +61,7 @@ export class Client {
     return socket;
   }
 
-  reinitialize(timer?: NodeJS.Timeout) {
+  private reinitialize = (timer?: NodeJS.Timeout) => {
     if (this.socket) {
       this.socket.removeAllListeners();
       this.socket.destroy();
@@ -76,7 +76,7 @@ export class Client {
     };
   }
 
-  updateProperties(newClient: Client) {
+  private updateProperties = (newClient: Client) => {
     this.socket = newClient.socket;
     this.host = newClient.host;
     this.port = newClient.port;
@@ -85,7 +85,7 @@ export class Client {
     this.handleConsoleMessage();
   }
 
-  handleConsoleMessage() {
+  private handleConsoleMessage = () => {
     process.stdin.removeAllListeners('data');
     process.stdin.on('data', (data) => {
       const message = data.toString().trim();
@@ -93,7 +93,7 @@ export class Client {
     });
   }
 
-  handleServerMessage(message: MessageType) {
+  private handleServerMessage = (message: MessageType) => {
     if (message.RSAPublicKey?.e && message.RSAPublicKey?.n) {
       this.serverPublicKey = {
         e: BigInt(message.RSAPublicKey.e),
@@ -112,7 +112,7 @@ export class Client {
     }
   }
 
-  sendPublicKey(key: RSAPublicKeyType, socket: Socket) {
+  private sendPublicKey = (key: RSAPublicKeyType, socket: Socket) => {
     const publicKeyMessage = {
       e: key.e.toString(),
       n: key.n.toString()
@@ -125,7 +125,7 @@ export class Client {
     socket.write(sendedMessage);
   }
 
-  sendMessage(message: string, socket: Socket) {
+  public sendMessage = (message: string, socket: Socket) => {
     if (this.serverPublicKey) {
       const encryptedMessage = RSA.encrypt(message, this.serverPublicKey);
       const messageJSON: MessageType = {

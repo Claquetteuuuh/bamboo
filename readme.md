@@ -1,5 +1,5 @@
 # Bamboo
-Bamboo est un CLI permettant d'effectuer des connexions TCP entre un serveur et plusieurs client.
+Bamboo est un CLI permettant d'effectuer des connexions TCP entre un serveur et plusieurs clients.
 
 ## Installation
 

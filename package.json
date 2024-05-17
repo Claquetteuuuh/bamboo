@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "client": "nodemon  --watch 'src/**/*.ts' --exec \"npx tsx ./src/index.ts\"",
+    "client": "nodemon  --watch 'src/**/*.ts' --exec \"npx tsx ./src/client.ts\"",
     "server": "nodemon  --watch 'src/**/*.ts' --exec \"npx tsx ./src/server.ts\""
   }, 
   "nodemonConfig": {

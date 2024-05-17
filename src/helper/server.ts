@@ -3,6 +3,7 @@ import { RSA } from "../lib/rsa";
 import { RSAKeysType, RSAPublicKeyType } from "../types/rsaTypes";
 import { messageType } from "../types/messageTypes";
 import { LogHelper } from "./log";
+import { config } from "../config/config";
 const { generateRSAKeys } = RSA;
 
 export class MainServer {
@@ -10,7 +11,7 @@ export class MainServer {
     clients: { socket: Socket, publicKey: RSAPublicKeyType }[];
     server: Server;
     port: number;
-    constructor(clients: { socket: Socket, publicKey: RSAPublicKeyType }[] = [], port: number = 8888) {
+    constructor(clients: { socket: Socket, publicKey: RSAPublicKeyType }[] = [], port: number = config.serverPort) {
         this.clients = clients;
         this.port = port;
 

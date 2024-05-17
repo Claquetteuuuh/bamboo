@@ -1,5 +1,6 @@
 import { Socket, createConnection } from "net";
 import { Client } from "./helper/client";
+import { config } from "./config/config";
 
 // 
 
@@ -17,7 +18,5 @@ import { Client } from "./helper/client";
 
 
 const HOST = '127.0.0.1';
-const PORT = 8888;
 
-
-const client = new Client(HOST, PORT)
+const client = new Client(HOST, config.serverPort)

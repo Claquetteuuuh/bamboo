@@ -3,6 +3,7 @@ import { RSA } from "../lib/rsa";
 import { RSAKeysType } from "../types/rsaTypes";
 import { messageType } from "../types/messageTypes";
 import { LogHelper } from "./log";
+import { config } from "../config/config";
 
 export class Client {
   socket: Socket;
@@ -13,9 +14,6 @@ export class Client {
   constructor(host: string, port: number) {
     this.host = host;
     this.port = port;
-    LogHelper.info("Génération des clés...")
-    this.keys = RSA.generateRSAKeys(1024);
-    LogHelper.success("Clé généré avec succès")
 
     this.socket = this.createSocketConnection();
   }
@@ -23,6 +21,10 @@ export class Client {
   createSocketConnection(): Socket {
     const socket = createConnection({ host: this.host, port: this.port }, () => {
       LogHelper.info('New client created.')
+
+      LogHelper.info("Génération des clés...")
+      this.keys = RSA.generateRSAKeys(1024);
+      LogHelper.success("Clé généré avec succès")
 
       // Send the client's public key to the server
       const publicKeyMessage = JSON.stringify({
@@ -54,7 +56,7 @@ export class Client {
       let timer = setTimeout(() => {
         LogHelper.info("Tentative de reconnection...")
         this.reinitialize(timer);
-      }, 5000);
+      }, config.retryConnectionDelay);
     });
 
     return socket;

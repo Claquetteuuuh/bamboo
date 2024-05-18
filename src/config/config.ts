@@ -3,4 +3,5 @@ export const config = {
     serverPort: 8888,
     clientRSAPrimeBitLength: 512,
     serverRSAPrimeBitLength: 1024,
+    sleepTime: 2000,
 }

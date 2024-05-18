@@ -1,6 +1,7 @@
-import { CLI } from "../../helper/CLI"
 import { describe, it } from "node:test"
 import { expect } from "chai"
+
+import { CLI } from "../../helper/CLI"
 
 export function testCLI (){
     const cli = new CLI()

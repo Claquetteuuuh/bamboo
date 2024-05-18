@@ -11,13 +11,13 @@ export function testRSA() {
         it('Raises an error on not encrypted', async () => {
             const encryptedMessage = encrypt(clearMessage, keys.publicKey);
             const result = encryptedMessage === clearMessage;
-            expect(result).toEqual(false)
+            expect(result).equals(false)
         })
         it('Raise error on bad decrypt', async () => {
             const encryptedMessage = encrypt(clearMessage, keys.publicKey);
             const decryptedMessage = decrypt(encryptedMessage, keys.privateKey);
             const result = decryptedMessage === clearMessage;
-            expect(result).toEqual(true)
+            expect(result).equals(true)
         })
     })
 } 

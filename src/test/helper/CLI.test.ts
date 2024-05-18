@@ -14,6 +14,22 @@ export function testCLI (){
             const result = cli.validateCommand("server");
             expect(result).equals("Usage: \n- server <start|stop|restart>")
         })
+        it('Raise an help on "server start" not work', async () => {
+            const result = cli.validateCommand("server");
+            expect(result).equals(true)
+        })
+        it('Raise an help on "server stop" not work', async () => {
+            const result = cli.validateCommand("server");
+            expect(result).equals(true)
+        })
+        it('Raise an help on "server restart" not work', async () => {
+            const result = cli.validateCommand("server");
+            expect(result).equals(true)
+        })
+        it('Raise error on "exit" not work', () => {
+            const result = cli.validateCommand("exit");
+            expect(result).equals(true)
+        })
     })
 }
 

@@ -22,7 +22,7 @@ export class MainServer {
         this.RSAKeys = generateRSAKeys(config.serverRSAPrimeBitLength);
 
         this.server = createServer((sock: Socket) => this.onClientConnection(sock));
-        this.handleConsoleMessage();
+        // this.handleConsoleMessage();
     }
 
     private onClientConnection = (sock: Socket) => {
@@ -48,10 +48,15 @@ export class MainServer {
         });
     }
 
-    public start = () => {
-        this.server.listen(this.port, () => {
-            LogHelper.info(`Server started on port ${this.port}`);
-        });
+    public start = (): boolean => {
+        try{
+            this.server.listen(this.port, () => {
+                LogHelper.info(`Server started on port ${this.port}`);
+            });
+            return true
+        }catch(err){
+            return false
+        }
     }
 
     private handleClientMessage = (message: MessageType, sock: Socket) => {
@@ -129,6 +134,15 @@ export class MainServer {
         this.server = newServer.server;
         this.port = newServer.port;
         this.focusedClient = newServer.focusedClient;
+    }
+
+    public close = (): boolean => {
+        try{
+            this.server.close();
+            return true;
+        }catch(err) {
+            return false;
+        }
     }
 
     public restart = () => {

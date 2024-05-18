@@ -130,7 +130,7 @@ export class MainServer {
 
     private updateProperties = (newServer: MainServer) => {
         this.RSAKeys = newServer.RSAKeys;
-        this.clients = newServer.clients;
+        this.clients = [];
         this.server = newServer.server;
         this.port = newServer.port;
         this.focusedClient = newServer.focusedClient;
@@ -138,21 +138,39 @@ export class MainServer {
 
     public close = (): boolean => {
         try{
-            this.server.close();
-            return true;
+            for (let i = 0; i < this.clients.length; i++) {
+                const client = this.clients[i];
+                client.socket.end();
+            }
+            this.server.close(() => {
+                LogHelper.success('Server closed successfully ');
+                return true;
+            })
+            return true
+            
         }catch(err) {
             return false;
         }
     }
 
     public restart = () => {
-        this.server.close(() => {
-            LogHelper.info('Server is restarting...');
-            const newServer = new MainServer(this.clients, this.port);
-            newServer.start();
-            this.updateProperties(newServer);
-            LogHelper.success('Server restarted successfully !')
-        });
+        try{
+            for (let i = 0; i < this.clients.length; i++) {
+                const client = this.clients[i];
+                client.socket.end();
+            }
+            this.server.close(() => {
+                LogHelper.info('Server is restarting...');
+                const newServer = new MainServer(this.clients, this.port);
+                newServer.start();
+                this.updateProperties(newServer);
+                LogHelper.success('Server restarted successfully !')
+                return true
+            })
+            return true
+        }catch(err){
+            return false
+        }
     }
     getClients = (): ClientType[] => {
         return this.clients

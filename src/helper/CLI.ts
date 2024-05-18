@@ -25,25 +25,44 @@ export class CLI {
             } else {
                 spinner.error({ text: "Cannot start server !" })
             }
-        }else{
+        } else {
             spinner.error({ text: "The server is already running !" })
         }
     }
 
     private closeServer = () => {
+        const spinner = createSpinner("Closing server...").start()
         if (this.server) {
-            const spinner = createSpinner("Closing server...").start()
             const stopped = this.server.close();
             if (stopped) {
                 spinner.success({ text: "Server closed successfully !" })
+                this.server = undefined
                 return true
             } else {
                 spinner.error({ text: "Cannot close server !" })
                 return false
             }
+        } else {
+            spinner.success({ text: "Server closed successfully !" })
+            return true
         }
-        return true
+    }
 
+    private restartServer = () => {
+        const spinner = createSpinner("Restarting server...").start()
+        if (this.server) {
+            const stopped = this.server.restart();
+            if (stopped) {
+                spinner.success({ text: "Server restarted successfully !" })
+                return true
+            } else {
+                spinner.error({ text: "Cannot restart server !" })
+                return false
+            }
+        } else {
+            spinner.success({ text: "Server restarted successfully !" })
+            return true
+        }
     }
 
     public startCLI = async () => {
@@ -81,7 +100,7 @@ export class CLI {
         })
 
         const command = answers.user_command;
-        switch (answers.user_command) {
+        switch (command) {
             case "exit":
                 const closeServer = this.closeServer()
                 if (closeServer) {
@@ -94,11 +113,26 @@ export class CLI {
                 this.askCommand()
                 break;
 
+            case "server stop":
+                this.closeServer()
+                this.askCommand()
+                break;
+
+            case "server start":
+                this.startServer()
+                this.askCommand()
+                break;
+
+            case "server restart":
+                this.restartServer()
+                this.askCommand()
+                break;
+
             default:
                 console.log(chalk.gray("Command not implemented !"))
                 this.askCommand()
                 break;
         }
-       
+
     }
 }

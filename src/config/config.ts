@@ -4,5 +4,5 @@ export const config = {
     clientRSAPrimeBitLength: 512,
     serverRSAPrimeBitLength: 1024,
     sleepTime: 2000,
-    debugMode: false,
+    debugMode: true,
 }

@@ -5,19 +5,36 @@
   "main": "index.js",
   "scripts": {
     "client": "nodemon  --watch 'src/**/*.ts' --exec \"npx tsx ./src/client.ts\"",
-    "server": "nodemon  --watch 'src/**/*.ts' --exec \"npx tsx ./src/server.ts\""
-  }, 
+    "server": "nodemon  --watch 'src/**/*.ts' --exec \"npx tsx ./src/server.ts\"",
+    "dev": "npx tsx ./src/index.ts",
+    "cli": "npx tsx ./src/index.ts",
+    "test": "npx tsx ./src/test/test.ts",
+    "prepare": "husky"
+  },
   "nodemonConfig": {
     "ext": "js,json,hbs,html,ts"
   },
   "type": "module",
   "devDependencies": {
+    "@types/chai": "^4.3.16",
+    "@types/chalk-animation": "^1.6.3",
+    "@types/inquirer": "^9.0.7",
     "@types/node": "^20",
     "autoprefixer": "^10.4.16",
     "eslint": "^8",
     "eslint-config-next": "13.5.4",
+    "husky": "^9.0.11",
     "nodemon": "^3.1.0",
     "tsx": "^4.10.3",
     "typescript": "^5"
+  },
+  "dependencies": {
+    "chai": "^5.1.1",
+    "chalk": "^5.3.0",
+    "chalk-animation": "^2.0.3",
+    "figlet": "^1.7.0",
+    "gradient-string": "^2.0.2",
+    "inquirer": "^9.2.22",
+    "nanospinner": "^1.1.0"
   }
 }

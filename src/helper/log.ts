@@ -1,11 +1,13 @@
+import { config } from "../config/config"
+
 export const LogHelper = {
     info: (message: string) => {
-        console.log("[❔] - ", message)
+        config.debugMode? console.log("\n[❔] - ", message): false
     },
     success: (message: string) => {
-        console.log("[✅] - ", message )
+        config.debugMode? console.log("\n[✅] - ", message ): false
     },
     error: (message: string) => {
-        console.log("[❌] - ", message)
+        config.debugMode? console.log("\n[❌] - ", message): false
     }
 }

@@ -6,23 +6,26 @@ import { LogHelper } from "./log";
 import { config } from "../config/config";
 const { generateRSAKeys } = RSA;
 
-export class MainServer {
-    RSAKeys: RSAKeysType;
-    clients: { socket: Socket, publicKey: RSAPublicKeyType }[];
-    server: Server;
-    port: number;
+type ClientType = { socket: Socket, publicKey: RSAPublicKeyType }
 
-    constructor(clients: { socket: Socket, publicKey: RSAPublicKeyType }[] = [], port: number = config.serverPort) {
+export class MainServer {
+    public RSAKeys: RSAKeysType;
+    private clients: ClientType[];
+    private server: Server;
+    private port: number;
+    private focusedClient: ClientType;
+
+    constructor(clients: ClientType[] = [], port: number = config.serverPort) {
         this.clients = clients;
         this.port = port;
 
         this.RSAKeys = generateRSAKeys(config.serverRSAPrimeBitLength);
 
         this.server = createServer((sock: Socket) => this.onClientConnection(sock));
-        this.handleConsoleMessage();
+        // this.handleConsoleMessage();
     }
 
-    onClientConnection(sock: Socket) {
+    private onClientConnection = (sock: Socket) => {
         LogHelper.success(`${sock.remoteAddress}:${sock.remotePort} Connected`);
 
         sock.on('data', (data) => {
@@ -37,7 +40,7 @@ export class MainServer {
 
         sock.on('close', () => {
             LogHelper.info(`${sock.remoteAddress}:${sock.remotePort} Connection closed`);
-            this.clients = this.clients.filter(client => client.socket !== sock);
+            this.removeClient(sock)
         });
 
         sock.on('error', (error) => {
@@ -45,19 +48,24 @@ export class MainServer {
         });
     }
 
-    start() {
-        this.server.listen(this.port, () => {
-            LogHelper.info(`Server started on port ${this.port}`);
-        });
+    public start = (): boolean => {
+        try{
+            this.server.listen(this.port, () => {
+                LogHelper.info(`Server started on port ${this.port}`);
+            });
+            return true
+        }catch(err){
+            return false
+        }
     }
 
-    handleClientMessage(message: MessageType, sock: Socket) {
+    private handleClientMessage = (message: MessageType, sock: Socket) => {
         if (message.RSAPublicKey?.e && message.RSAPublicKey?.n) {
             const publicKey = {
                 e: BigInt(message.RSAPublicKey?.e),
                 n: BigInt(message.RSAPublicKey?.n)
             };
-            this.clients.push({ socket: sock, publicKey: publicKey });
+            this.addClient(sock, publicKey);
             LogHelper.success('Client public key received and stored.');
             this.sendPublicKey(this.RSAKeys.publicKey, sock);
         } else {
@@ -73,7 +81,7 @@ export class MainServer {
         }
     }
 
-    sendPublicKey(key: RSAPublicKeyType, socket: Socket) {
+    private sendPublicKey = (key: RSAPublicKeyType, socket: Socket) => {
         const publicKeyMessage = {
             e: key.e.toString(),
             n: key.n.toString()
@@ -86,7 +94,7 @@ export class MainServer {
         socket.write(sendedMessage);
     }
 
-    sendMessage(message: string, clientSocket: Socket) {
+    private sendMessage = (message: string, clientSocket: Socket) => {
         const client = this.clients.find(c => c.socket === clientSocket);
         if (client) {
             const encryptedMessage = RSA.encrypt(message, client.publicKey);
@@ -100,11 +108,15 @@ export class MainServer {
             }
             clientSocket.write(JSON.stringify(messageJSON));
         } else {
-            LogHelper.error("Client public key is not available");
+            LogHelper.error("Client is not found");
         }
     }
 
-    handleConsoleMessage() {
+    public sendMessageToFocused = (message: string) => {
+        this.sendMessage(message, this.getFocusedClient().socket)
+    }
+
+    private handleConsoleMessage = () => {
         // TODO gerer a quel client on envois le message
         process.stdin.on('data', (data) => {
             const message = data.toString().trim();
@@ -115,4 +127,76 @@ export class MainServer {
             }
         });
     }
+
+    private updateProperties = (newServer: MainServer) => {
+        this.RSAKeys = newServer.RSAKeys;
+        this.clients = [];
+        this.server = newServer.server;
+        this.port = newServer.port;
+        this.focusedClient = newServer.focusedClient;
+    }
+
+    public close = (): boolean => {
+        try{
+            for (let i = 0; i < this.clients.length; i++) {
+                const client = this.clients[i];
+                client.socket.end();
+            }
+            this.server.close(() => {
+                LogHelper.success('Server closed successfully ');
+                return true;
+            })
+            return true
+            
+        }catch(err) {
+            return false;
+        }
+    }
+
+    public restart = () => {
+        try{
+            for (let i = 0; i < this.clients.length; i++) {
+                const client = this.clients[i];
+                client.socket.end();
+            }
+            this.server.close(() => {
+                LogHelper.info('Server is restarting...');
+                const newServer = new MainServer(this.clients, this.port);
+                newServer.start();
+                this.updateProperties(newServer);
+                LogHelper.success('Server restarted successfully !')
+                return true
+            })
+            return true
+        }catch(err){
+            return false
+        }
+    }
+    getClients = (): ClientType[] => {
+        return this.clients
+    }
+
+    removeClient = (socket: Socket) => {
+        this.clients = this.clients.filter(client => client.socket !== socket);
+    }
+
+    addClient = (socket: Socket, publicKey: RSAPublicKeyType) => {
+        this.clients.push({ socket: socket, publicKey: publicKey });
+    }
+
+    setFocusedClient = (socket: Socket) => {
+        this.focusedClient = this.clients.find(client => client.socket === socket);
+    }
+
+    getFocusedClient = (): ClientType => {
+        return this.focusedClient;
+    }
+
+    setPort = (port: number) => {
+        this.port = port;
+    }
+
+    getPort = (): number => {
+        return this.port;
+    } 
 }

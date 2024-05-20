@@ -12,7 +12,7 @@ export class MainServer {
     public RSAKeys: RSAKeysType;
     private clients: ClientType[];
     private server: Server;
-    public port: number;
+    private port: number;
     private focusedClient: ClientType;
 
     constructor(clients: ClientType[] = [], port: number = config.serverPort) {
@@ -191,4 +191,12 @@ export class MainServer {
     getFocusedClient = (): ClientType => {
         return this.focusedClient;
     }
+
+    setPort = (port: number) => {
+        this.port = port;
+    }
+
+    getPort = (): number => {
+        return this.port;
+    } 
 }

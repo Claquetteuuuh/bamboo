@@ -1,6 +1,4 @@
-import { describe, it } from "node:test";
 import { config } from "../config/config";
-import { LogHelper } from "./log";
 import { MainServer } from "./server";
 import chalk from "chalk";
 import chalkAnimation from "chalk-animation"
@@ -85,6 +83,17 @@ export class CLI {
                 return true
             }
             return "Usage: \n- server <start|stop|restart>"
+        } else if (/^(config)(.*)?$/.test(input)) {
+            // port config
+            if (/^(config set port) (.*)$/.test(input)) {
+                if (/^(config set port) ([0-9]{1,})$/.test(input)) {
+                    return true
+                }
+                return "Port value should be a number !"
+            } else if (/^(config get port)$/.test(input)) {
+                return true
+            }
+            return "Usage: \n- config <set|get> <port|debug|rsa_length> <value>"
         }
         else {
             return "Command not found !"
@@ -99,7 +108,7 @@ export class CLI {
             validate: this.validateCommand,
         })
 
-        const command = answers.user_command;
+        const command: string = answers.user_command;
         switch (command) {
             case "exit":
                 const closeServer = this.closeServer()
@@ -128,11 +137,49 @@ export class CLI {
                 this.askCommand()
                 break;
 
+            case command.match(/^(config set port) ([0-9])*$/)?.input:
+                const port = command.split(" ")[3]
+                try {
+                    const portNumber = Number.parseInt(port)
+                    this.setServerPort(portNumber)
+                } catch (err) {
+                    console.log(chalk.red("Port value should be a number !"))
+                }
+                this.askCommand()
+                break;
+
+            case command.match(/^(config get port)$/)?.input:
+                this.getServerPort()
+                this.askCommand()
+                break;
+
             default:
                 console.log(chalk.gray("Command not implemented !"))
                 this.askCommand()
                 break;
         }
 
+    }
+
+    private setServerPort = (port: number) => {
+        const spinner = createSpinner("Changing port...").start()
+        if (this.server) {
+            this.server.setPort(port)
+            const stopped = this.server.restart();
+            if (stopped) {
+                spinner.success({ text: "Port changed successfully !" })
+                return true
+            } else {
+                spinner.error({ text: "Cannot restart server !" })
+                return false
+            }
+        } else {
+            spinner.error({ text: "The server is not running !" })
+            return true
+        }
+    }
+
+    private getServerPort = (): number => {
+        return this.server.getPort();
     }
 }

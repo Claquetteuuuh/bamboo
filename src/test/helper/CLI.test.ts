@@ -30,6 +30,30 @@ export function testCLI (){
             const result = cli.validateCommand("exit");
             expect(result).equals(true)
         })
+        it('Raise an help on "config" not work', () => {
+            const result = cli.validateCommand("config");
+            expect(result).equals("Usage: \n- config <set|get> <port|debug|rsa_length> <value>")
+        })
+        it('Raise an help on "config set port" not work', () => {
+            const result = cli.validateCommand("config");
+            expect(result).equals("Usage: \n- config <set|get> <port|debug|rsa_length> <value>")
+        })
+        it('Raise an help on "config" not work', () => {
+            const result = cli.validateCommand("config");
+            expect(result).equals("Usage: \n- config <set|get> <port|debug|rsa_length> <value>")
+        })
+        it('Raise an error on "config get port" not work', () => {
+            const result = cli.validateCommand("config get port");
+            expect(result).equals(true)
+        })
+        it('Raise an error on "config set port aaa" work', () => {
+            const result = cli.validateCommand("config set port aaa");
+            expect(result).equals("Port value should be a number !")
+        })
+        it('Raise an error on "config set port 123" not work', () => {
+            const result = cli.validateCommand("config set port 123");
+            expect(result).equals(true)
+        })
     })
 }
 

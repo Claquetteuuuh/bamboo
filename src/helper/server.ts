@@ -6,7 +6,7 @@ import { LogHelper } from "./log";
 import { config } from "../config/config";
 const { generateRSAKeys } = RSA;
 
-type ClientType = { socket: Socket, publicKey: RSAPublicKeyType }
+type ClientType = { name: string, socket: Socket, publicKey: RSAPublicKeyType, connectionDate: Date }
 
 export class MainServer {
     public RSAKeys: RSAKeysType;
@@ -180,12 +180,34 @@ export class MainServer {
         this.clients = this.clients.filter(client => client.socket !== socket);
     }
 
-    addClient = (socket: Socket, publicKey: RSAPublicKeyType) => {
-        this.clients.push({ socket: socket, publicKey: publicKey });
+    setClientName = (currentName: string, newName: string): boolean => {
+        if(this.clients.filter((client => client.name === newName)).length !== 0){
+            return false
+        }
+        for (let i = 0; i < this.clients.length; i++) {
+            const client = this.clients[i];
+            if(client.name === currentName){
+                client.name = newName
+                return true
+            }
+        }
+        return false
     }
 
-    setFocusedClient = (socket: Socket) => {
-        this.focusedClient = this.clients.find(client => client.socket === socket);
+    addClient = (socket: Socket, publicKey: RSAPublicKeyType) => {
+        this.clients.push({ name: `client-${this.clients.length +1}`, socket: socket, publicKey: publicKey, connectionDate: new Date() });
+    }
+
+    setFocusedClient = (clientName?: string) => {
+        let client: ClientType;
+        client = this.clients.find(client => client.name === clientName)
+        if(client){
+            this.focusedClient = client;
+            return true
+        }else{
+            this.focusedClient;
+            return true
+        }
     }
 
     getFocusedClient = (): ClientType => {

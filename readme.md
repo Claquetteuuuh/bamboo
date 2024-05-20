@@ -67,6 +67,11 @@ Deselectionner un client:
 [Bamboo]$> clients unfocus
 ```
 
+Tester la connexion avec un client:
+```
+[Bamboo]$> ping <CLIENT_NAME>
+```
+
 #### Config
 
 ##### Port

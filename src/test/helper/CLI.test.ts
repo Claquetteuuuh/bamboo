@@ -2,56 +2,94 @@ import { describe, it } from "node:test"
 import { expect } from "chai"
 
 import { CLI } from "../../helper/CLI"
+import chalk from "chalk"
 
 export function testCLI (){
     const cli = new CLI()
     describe("Confirm answere validator", () => {
-        it('Raises an error on "blah"', async () => {
-            const result = cli.validateCommand("blah");
+        let command: string;
+        command = "blah"
+        it(`Raises an error on "${command}"`, async () => {
+            const result = cli.validateCommand(command);
             expect(result).equals("Command not found !")
         })
-        it('Raise an help on "server"', async () => {
-            const result = cli.validateCommand("server");
+
+        command = "exit"
+        it(`Raise error on "${command}" not work`, () => {
+            const result = cli.validateCommand(command);
+            expect(result).equals(true)
+        })
+
+        // test server commands
+        command = "server"
+        it(`Raise an help on "${command}"`, async () => {
+            const result = cli.validateCommand(command);
             expect(result).equals("Usage: \n- server <start|stop|restart>")
         })
-        it('Raise an help on "server start" not work', async () => {
-            const result = cli.validateCommand("server start");
+        command = "server start"
+        it(`Raise an help on "${command}" not work`, async () => {
+            const result = cli.validateCommand(command);
             expect(result).equals(true)
         })
-        it('Raise an help on "server stop" not work', async () => {
-            const result = cli.validateCommand("server stop");
+        command = "server stop"
+        it(`Raise an help on "${command}" not work`, async () => {
+            const result = cli.validateCommand(command);
             expect(result).equals(true)
         })
-        it('Raise an help on "server restart" not work', async () => {
-            const result = cli.validateCommand("server restart");
+        command = "server restart"
+        it(`Raise an help on "${command}" not work`, async () => {
+            const result = cli.validateCommand(command);
             expect(result).equals(true)
         })
-        it('Raise error on "exit" not work', () => {
-            const result = cli.validateCommand("exit");
-            expect(result).equals(true)
-        })
-        it('Raise an help on "config" not work', () => {
-            const result = cli.validateCommand("config");
+
+        // test config
+        command = "config"
+        it(`Raise an help on "${command}" not work`, () => {
+            const result = cli.validateCommand(command);
             expect(result).equals("Usage: \n- config <set|get> <port|debug|rsa_length> <value>")
         })
-        it('Raise an help on "config set port" not work', () => {
-            const result = cli.validateCommand("config");
+        command = "config set port"
+        it(`Raise an help on "${command}" not work`, () => {
+            const result = cli.validateCommand(command);
             expect(result).equals("Usage: \n- config <set|get> <port|debug|rsa_length> <value>")
         })
-        it('Raise an help on "config" not work', () => {
-            const result = cli.validateCommand("config");
+        command = "config"
+        it(`Raise an help on "${command}" not work`, () => {
+            const result = cli.validateCommand(command);
             expect(result).equals("Usage: \n- config <set|get> <port|debug|rsa_length> <value>")
         })
-        it('Raise an error on "config get port" not work', () => {
-            const result = cli.validateCommand("config get port");
+
+        // test port
+        command = "config get port"
+        it(`Raise an error on "${command}" not work`, () => {
+            const result = cli.validateCommand(command);
             expect(result).equals(true)
         })
-        it('Raise an error on "config set port aaa" work', () => {
-            const result = cli.validateCommand("config set port aaa");
+        command = "config set port aaa"
+        it(`Raise an error on "${command}"`, () => {
+            const result = cli.validateCommand(command);
             expect(result).equals("Port value should be a number !")
         })
-        it('Raise an error on "config set port 123" not work', () => {
-            const result = cli.validateCommand("config set port 123");
+        command = "config set port 123"
+        it(`Raise an error on "${command}" not work`, () => {
+            const result = cli.validateCommand(command);
+            expect(result).equals(true)
+        })
+
+        // test config
+        command = "config get debug"
+        it(`Raise an error on "${command}" not work`, () => {
+            const result = cli.validateCommand(command);
+            expect(result).equals(true)
+        })
+        command = "config set debug aaa"
+        it(`Raise an error on "${command}"`, () => {
+            const result = cli.validateCommand(command);
+            expect(result).equals(`Debug value should be ${chalk.underline("true")} or ${chalk.underline("false")}`)
+        })
+        command = "config set debug true"
+        it(`Raise an error on "${command}" not work`, () => {
+            const result = cli.validateCommand(command);
             expect(result).equals(true)
         })
     })

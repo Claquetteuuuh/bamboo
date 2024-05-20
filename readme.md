@@ -63,3 +63,15 @@ Changement du port du server
 ```
 [Bamboo]$> config set port <PORT>
 ```
+
+##### Debug
+
+Recuperation de l'état du mode debug
+```
+[Bamboo]$> config get debug
+```
+
+Changement de l'état du mode debug
+```
+[Bamboo]$> config set debug <true|false>
+```

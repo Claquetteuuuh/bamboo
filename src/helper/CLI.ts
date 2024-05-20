@@ -63,6 +63,38 @@ export class CLI {
         }
     }
 
+
+    private setServerPort = (port: number) => {
+        const spinner = createSpinner("Changing port...").start()
+        if (this.server) {
+            config.serverPort = port;
+            this.server.setPort(port)
+            const stopped = this.server.restart();
+            if (stopped) {
+                spinner.success({ text: "Port changed successfully !" })
+                return true
+            } else {
+                spinner.error({ text: "Cannot restart server !" })
+                return false
+            }
+        } else {
+            spinner.error({ text: "The server is not running !" })
+            return true
+        }
+    }
+
+    private getServerPort = (): number => {
+        return this.server.getPort();
+    }
+
+    private setDebugMode = (value: boolean) => {
+        config.debugMode = value;
+    }
+
+    private getDebugMode = (): boolean => {
+        return config.debugMode;
+    }
+
     public startCLI = async () => {
         let welcomText = chalkAnimation.pulse(chalk.green("Welcome to bamboo CLI !"));
         await sleep()
@@ -85,13 +117,22 @@ export class CLI {
             return "Usage: \n- server <start|stop|restart>"
         } else if (/^(config)(.*)?$/.test(input)) {
             // port config
-            if (/^(config set port) (.*)$/.test(input)) {
+            if (/^(config set port)(.*)$/.test(input)) {
                 if (/^(config set port) ([0-9]{1,})$/.test(input)) {
                     return true
                 }
                 return "Port value should be a number !"
             } else if (/^(config get port)$/.test(input)) {
                 return true
+            }
+
+            else if (/^(config get debug)$/.test(input)) {
+                return true
+            } else if (/^(config set debug(.*)?)$/.test(input)) {
+                if (/^(config set debug (true|false)?)$/.test(input)) {
+                    return true
+                }
+                return `Debug value should be ${chalk.underline("true")} or ${chalk.underline("false")}`
             }
             return "Usage: \n- config <set|get> <port|debug|rsa_length> <value>"
         }
@@ -149,7 +190,23 @@ export class CLI {
                 break;
 
             case command.match(/^(config get port)$/)?.input:
-                this.getServerPort()
+                console.log(chalk.green(`Server is running on port: ${this.getServerPort()}`))
+                this.askCommand()
+                break;
+
+            case command.match(/^(config set debug (true|false)?)$/)?.input:
+                const debug = command.split(" ")[3]
+                this.setDebugMode(debug === "true" ? true : false)
+                this.askCommand()
+                break;
+
+            case command.match(/^(config get debug)$/)?.input:
+                const currentDebugModeValue = this.getDebugMode()
+                if (currentDebugModeValue) {
+                    console.log("Debug mode is enabled !")
+                } else {
+                    console.log("Debug mode is disabled !")
+                }
                 this.askCommand()
                 break;
 
@@ -159,27 +216,5 @@ export class CLI {
                 break;
         }
 
-    }
-
-    private setServerPort = (port: number) => {
-        const spinner = createSpinner("Changing port...").start()
-        if (this.server) {
-            this.server.setPort(port)
-            const stopped = this.server.restart();
-            if (stopped) {
-                spinner.success({ text: "Port changed successfully !" })
-                return true
-            } else {
-                spinner.error({ text: "Cannot restart server !" })
-                return false
-            }
-        } else {
-            spinner.error({ text: "The server is not running !" })
-            return true
-        }
-    }
-
-    private getServerPort = (): number => {
-        return this.server.getPort();
     }
 }

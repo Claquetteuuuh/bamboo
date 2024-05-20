@@ -75,3 +75,15 @@ Changement de l'état du mode debug
 ```
 [Bamboo]$> config set debug <true|false>
 ```
+
+##### Rsa bits length
+
+Recuperation de la taille des bits RSA
+```
+[Bamboo]$> config get rsa_length
+```
+
+Changement de la taille des bits RSA
+```
+[Bamboo]$> config set rsa_length <VALUE>
+```

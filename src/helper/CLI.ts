@@ -88,11 +88,23 @@ export class CLI {
     }
 
     private setDebugMode = (value: boolean) => {
+        const spinner = createSpinner("Changing debug mode...").start()
         config.debugMode = value;
+        spinner.success({ text: "Debug mode changed successfully !" })
     }
 
     private getDebugMode = (): boolean => {
         return config.debugMode;
+    }
+
+    private setRsaLength = (number: number) => {
+        const spinner = createSpinner("Changing rsa length...").start()
+        config.serverRSAPrimeBitLength = number;
+        spinner.success({ text: "Rsa length changed successfully !" })
+    }
+
+    private getRsaLength = (): number => {
+        return config.serverRSAPrimeBitLength;
     }
 
     public startCLI = async () => {
@@ -126,6 +138,7 @@ export class CLI {
                 return true
             }
 
+            // debug mode
             else if (/^(config get debug)$/.test(input)) {
                 return true
             } else if (/^(config set debug(.*)?)$/.test(input)) {
@@ -133,6 +146,16 @@ export class CLI {
                     return true
                 }
                 return `Debug value should be ${chalk.underline("true")} or ${chalk.underline("false")}`
+            }
+
+            // rsa_length
+            if (/^(config set rsa_length)(.*)$/.test(input)) {
+                if (/^(config set rsa_length) ([0-9]{1,})$/.test(input)) {
+                    return true
+                }
+                return "RSA length value should be a number !"
+            } else if (/^(config get rsa_length)$/.test(input)) {
+                return true
             }
             return "Usage: \n- config <set|get> <port|debug|rsa_length> <value>"
         }
@@ -207,6 +230,26 @@ export class CLI {
                 } else {
                     console.log("Debug mode is disabled !")
                 }
+                this.askCommand()
+                break;
+
+            case command.match(/^(config set rsa_length) ([0-9])*$/)?.input:
+                const rsa = command.split(" ")[3]
+                try {
+                    const rsaLength = Number.parseInt(rsa)
+                    if(4096 % rsaLength !== 0){
+                        console.log(chalk.red("RSA length value should be a divider of 4096 !"))
+                    }else{
+                        this.setRsaLength(rsaLength)
+                    }
+                } catch (err) {
+                    console.log(chalk.red("RSA length value should be a number !"))
+                }
+                this.askCommand()
+                break;
+
+            case command.match(/^(config get rsa_length)$/)?.input:
+                console.log(chalk.green(`Rsa length: ${this.getRsaLength()}`))
                 this.askCommand()
                 break;
 

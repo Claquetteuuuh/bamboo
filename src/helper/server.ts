@@ -14,6 +14,7 @@ export class MainServer {
     private server: Server;
     private port: number;
     private focusedClient: ClientType;
+    private totalConnection = 0;
 
     constructor(clients: ClientType[] = [], port: number = config.serverPort) {
         this.clients = clients;
@@ -76,6 +77,10 @@ export class MainServer {
             } else {
                 clearMessage = RSA.decrypt(message.content, this.RSAKeys.privateKey);
                 // this.sendMessage(`Encrypted data received!`, sock);
+            }
+
+            if(clearMessage === "pong"){
+                LogHelper.info("Received: Pong")
             }
             LogHelper.info(`>> data received: ${clearMessage}`);
         }
@@ -195,7 +200,8 @@ export class MainServer {
     }
 
     addClient = (socket: Socket, publicKey: RSAPublicKeyType) => {
-        this.clients.push({ name: `client-${this.clients.length +1}`, socket: socket, publicKey: publicKey, connectionDate: new Date() });
+        this.totalConnection +=1;
+        this.clients.push({ name: `client-${this.totalConnection}`, socket: socket, publicKey: publicKey, connectionDate: new Date() });
     }
 
     setFocusedClient = (clientName?: string) => {
@@ -207,6 +213,17 @@ export class MainServer {
         }else{
             this.focusedClient;
             return true
+        }
+    }
+
+    sendPing = (clientName: string) => {
+        let client: ClientType;
+        client = this.clients.find(client => client.name === clientName)
+        if(client){
+            this.sendMessage("ping", client.socket)
+            return true
+        }else{
+            return false
         }
     }
 

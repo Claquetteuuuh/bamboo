@@ -33,10 +33,20 @@ export function testCLI (){
             const result = cli.validateCommand("server restart");
             expect(result).equals(true)
         })
+        
+        it('Raise an help on "ping"', async () => {
+            const result = cli.validateCommand("ping");
+            expect(result).equals("Usage: \n- ping <CLIENT_NAME>")
+        })
+       
+        it('Raise an error on "ping test" not work', async () => {
+            const result = cli.validateCommand("ping test");
+            expect(result).equals(true)
+        })
 
         it('Raise an help on "clients"', async () => {
             const result = cli.validateCommand("clients");
-            expect(result).equals("Usage: \n- clients <list|focus|unfocus>")
+            expect(result).equals("Usage: \n- clients <list|focus|unfocus|interact>")
         })
         it('Raise an help on "clients focus"', async () => {
             const result = cli.validateCommand("clients focus");

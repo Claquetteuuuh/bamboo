@@ -141,14 +141,14 @@ export class CLI {
             return
         }
         const focused = this.server.setFocusedClient(clientName)
-        if(!clientName && focused){
+        if (!clientName && focused) {
             console.log("Client unfocused successfully !")
             return
         }
-        if(focused){
+        if (focused) {
             console.log(`Client ${this.server.getFocusedClient().name} has been focused !`)
-        }else{
-            console.log("Can't focus this client !") 
+        } else {
+            console.log("Can't focus this client !")
         }
     }
 
@@ -177,6 +177,19 @@ export class CLI {
         spinner.success({ text: "The name of the client has been changed successfully !" })
     }
 
+    private ping = (clientName: string) => {
+        if(!this.server){
+            console.log("Server is not running !")
+            return
+        }
+        const response = this.server.sendPing(clientName);
+        if(!response){
+            console.log("Can't send ping, maybe this client doesn't exists !")
+            return;
+        }
+        console.log("Ping sended !")
+    }
+
     public startCLI = async () => {
         let welcomText = chalkAnimation.pulse(chalk.green("Welcome to bamboo CLI !"));
         await sleep()
@@ -202,9 +215,9 @@ export class CLI {
                 return true
             } else if (/^(clients focus)$/.test(input)) {
                 return "Usage: \n - clients focus <CLIENT_NAME>"
-            } else if (/^(clients focus (.*))$/.test(input)){
+            } else if (/^(clients focus (.*))$/.test(input)) {
                 return true
-            }else if (/^(clients rename (.*) (.*))$/.test(input)) {
+            } else if (/^(clients rename (.*) (.*))$/.test(input)) {
                 return true
             } else if (/^(clients unfocus)$/.test(input)) {
                 return true
@@ -213,6 +226,16 @@ export class CLI {
             }
             return "Usage: \n- clients <list|focus|unfocus|interact>"
         }
+
+        // ping
+        else if (/^(ping(.*))$/.test(input)) {
+            if (/^(ping (.*))$/.test(input)){
+                return true
+            } 
+            return "Usage: \n- ping <CLIENT_NAME>"
+        }
+
+        // config
         else if (/^(config)(.*)?$/.test(input)) {
             // port config
             if (/^(config set port)(.*)$/.test(input)) {
@@ -268,6 +291,13 @@ export class CLI {
                     process.exit(0)
                 }
                 break;
+
+            case command.match(/^(ping (.*))$/)?.input:
+                const pingedClientName = command.split(" ")[1]
+                this.ping(pingedClientName)
+                this.askCommand()
+                break;
+
             case "server start":
                 this.startServer()
                 this.askCommand()

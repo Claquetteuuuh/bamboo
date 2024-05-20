@@ -35,55 +35,77 @@ npm run client
 ### CLI commands
 
 #### Server
-Lancement du server
+Lancement du server:
 ```
 [Bamboo]$> server start
 ```
 
-Redemarrage du server
+Redemarrage du server:
 ```
 [Bamboo]$> server restart
 ```
 
-Cloture du server
+Cloture du server:
 ```
 [Bamboo]$> server stop
+```
+
+#### Client
+
+Lister les clients:
+```
+[Bamboo]$> clients list
+```
+
+Selectionner un client: 
+```
+[Bamboo]$> clients focus <CLIENT_NAME>
+```
+
+Deselectionner un client:
+```
+[Bamboo]$> clients unfocus
+```
+
+Tester la connexion avec un client:
+```
+[Bamboo]$> ping <CLIENT_NAME>
 ```
 
 #### Config
 
 ##### Port
 
-Recuperation du port du server
+Recuperation du port du server:
 ```
 [Bamboo]$> config get port
 ```
 
-Changement du port du server
+Changement du port du server:
 ```
 [Bamboo]$> config set port <PORT>
 ```
 
 ##### Debug
 
-Recuperation de l'état du mode debug
+Recuperation de l'état du mode debug:
 ```
 [Bamboo]$> config get debug
 ```
 
-Changement de l'état du mode debug
+Changement de l'état du mode debug:
 ```
 [Bamboo]$> config set debug <true|false>
 ```
 
 ##### Rsa bits length
 
-Recuperation de la taille des bits RSA
+Recuperation de la taille des bits RSA:
 ```
 [Bamboo]$> config get rsa_length
 ```
 
-Changement de la taille des bits RSA
+Changement de la taille des bits RSA:
 ```
 [Bamboo]$> config set rsa_length <VALUE>
 ```

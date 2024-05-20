@@ -33,6 +33,33 @@ export function testCLI (){
             const result = cli.validateCommand("server restart");
             expect(result).equals(true)
         })
+        
+        it('Raise an help on "ping"', async () => {
+            const result = cli.validateCommand("ping");
+            expect(result).equals("Usage: \n- ping <CLIENT_NAME>")
+        })
+       
+        it('Raise an error on "ping test" not work', async () => {
+            const result = cli.validateCommand("ping test");
+            expect(result).equals(true)
+        })
+
+        it('Raise an help on "clients"', async () => {
+            const result = cli.validateCommand("clients");
+            expect(result).equals("Usage: \n- clients <list|focus|unfocus|interact>")
+        })
+        it('Raise an help on "clients focus"', async () => {
+            const result = cli.validateCommand("clients focus");
+            expect(result).equals("Usage: \n - clients focus <CLIENT_NAME>")
+        })
+        it('Raise an error on "clients focus test" not work', async () => {
+            const result = cli.validateCommand("clients focus test");
+            expect(result).equals(true)
+        })
+        it('Raise an error on "clients interact" not work', async () => {
+            const result = cli.validateCommand("clients interact");
+            expect(result).equals(true)
+        })
 
         // test config
         it('Raise an help on "config" not work', () => {
@@ -62,7 +89,7 @@ export function testCLI (){
             expect(result).equals(true)
         })
 
-        // test config
+        // test debug
         it('Raise an error on "config get debug" not work', () => {
             const result = cli.validateCommand("config get debug");
             expect(result).equals(true)

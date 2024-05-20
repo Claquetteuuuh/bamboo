@@ -107,6 +107,89 @@ export class CLI {
         return config.serverRSAPrimeBitLength;
     }
 
+    private rpad = (max: number, text: string) => {
+        return `${' '.repeat((max - text.length) / 2)}${text}${' '.repeat(Math.round((max - text.length) / 2))}`
+    }
+
+    private listClients = () => {
+        if (this.server) {
+            const IpText = "IP";
+            const NameText = "Nom";
+            const CreationText = "Date de creation";
+
+            const maxIpLenth = Math.max(...this.server.getClients().map(client => client.socket.remoteAddress.length), IpText.length) + 4;
+            const maxNameLength = Math.max(...this.server.getClients().map(client => client.name.length), NameText.length) + 4;
+            const maxCreationDateLength = Math.max(...this.server.getClients().map(client => client.connectionDate.toLocaleDateString().length), CreationText.length) + 4;
+
+            console.log(`/${'-'.repeat(maxNameLength)}+${'-'.repeat(maxIpLenth)}+${'-'.repeat(maxCreationDateLength)}\\`)
+            console.log(`|${this.rpad(maxNameLength, NameText)}|${this.rpad(maxIpLenth, IpText)}|${this.rpad(maxCreationDateLength, CreationText)}|`)
+            for (let i = 0; i < this.server.getClients().length; i++) {
+                console.log(`|${'-'.repeat(maxNameLength)}+${'-'.repeat(maxIpLenth)}+${'-'.repeat(maxCreationDateLength)}|`)
+                const client = this.server.getClients()[i];
+                console.log(`|${this.rpad(maxNameLength, client.name)}|${this.rpad(maxIpLenth, client.socket.remoteAddress)}|${this.rpad(maxCreationDateLength, client.connectionDate.toLocaleDateString())}|`)
+            }
+            console.log(`\\${'-'.repeat(maxNameLength)}+${'-'.repeat(maxIpLenth)}+${'-'.repeat(maxCreationDateLength)}/`)
+
+        } else {
+            console.log("The server is not running !")
+        }
+    }
+
+    private setFocusedClient = (clientName?: string) => {
+        if (!this.server) {
+            console.log("Server is not running !")
+            return
+        }
+        const focused = this.server.setFocusedClient(clientName)
+        if (!clientName && focused) {
+            console.log("Client unfocused successfully !")
+            return
+        }
+        if (focused) {
+            console.log(`Client ${this.server.getFocusedClient().name} has been focused !`)
+        } else {
+            console.log("Can't focus this client !")
+        }
+    }
+
+    private getFocusedClient = (clientName?: string) => {
+        if (!this.server) {
+            console.log("Server is not running !")
+            return
+        }
+        console.log(`Focused client: ${this.server.getFocusedClient().name}`)
+    }
+
+    private changeClientName = (oldName: string, newName: string) => {
+        const spinner = createSpinner("Changing client name...").start()
+        if (/(client-([0-9]*))$/.test(newName)) {
+            spinner.error({ text: "This client name can't be used !" })
+            return
+        }
+        if (!this.server) {
+            spinner.error({ text: "Server is not running !" })
+            return
+        }
+        if (!this.server.setClientName(oldName, newName)) {
+            spinner.error({ text: "Client doesn't exists or name already taken !" })
+            return
+        }
+        spinner.success({ text: "The name of the client has been changed successfully !" })
+    }
+
+    private ping = (clientName: string) => {
+        if(!this.server){
+            console.log("Server is not running !")
+            return
+        }
+        const response = this.server.sendPing(clientName);
+        if(!response){
+            console.log("Can't send ping, maybe this client doesn't exists !")
+            return;
+        }
+        console.log("Ping sended !")
+    }
+
     public startCLI = async () => {
         let welcomText = chalkAnimation.pulse(chalk.green("Welcome to bamboo CLI !"));
         await sleep()
@@ -127,7 +210,33 @@ export class CLI {
                 return true
             }
             return "Usage: \n- server <start|stop|restart>"
-        } else if (/^(config)(.*)?$/.test(input)) {
+        } else if (/^(clients)(.*)?$/.test(input)) {
+            if (/^(clients list)$/.test(input)) {
+                return true
+            } else if (/^(clients focus)$/.test(input)) {
+                return "Usage: \n - clients focus <CLIENT_NAME>"
+            } else if (/^(clients focus (.*))$/.test(input)) {
+                return true
+            } else if (/^(clients rename (.*) (.*))$/.test(input)) {
+                return true
+            } else if (/^(clients unfocus)$/.test(input)) {
+                return true
+            } else if (/^(clients interact)$/.test(input)) {
+                return true
+            }
+            return "Usage: \n- clients <list|focus|unfocus|interact>"
+        }
+
+        // ping
+        else if (/^(ping(.*))$/.test(input)) {
+            if (/^(ping (.*))$/.test(input)){
+                return true
+            } 
+            return "Usage: \n- ping <CLIENT_NAME>"
+        }
+
+        // config
+        else if (/^(config)(.*)?$/.test(input)) {
             // port config
             if (/^(config set port)(.*)$/.test(input)) {
                 if (/^(config set port) ([0-9]{1,})$/.test(input)) {
@@ -164,6 +273,7 @@ export class CLI {
         }
     }
 
+
     private askCommand = async () => {
         const answers = await inquirer.prompt({
             name: "user_command",
@@ -181,6 +291,13 @@ export class CLI {
                     process.exit(0)
                 }
                 break;
+
+            case command.match(/^(ping (.*))$/)?.input:
+                const pingedClientName = command.split(" ")[1]
+                this.ping(pingedClientName)
+                this.askCommand()
+                break;
+
             case "server start":
                 this.startServer()
                 this.askCommand()
@@ -201,6 +318,29 @@ export class CLI {
                 this.askCommand()
                 break;
 
+            case "clients list":
+                this.listClients()
+                this.askCommand()
+                break;
+
+            case "clients unfocus":
+                this.setFocusedClient();
+                this.askCommand()
+                break;
+
+            case command.match(/^(clients focus (.*))$/)?.input:
+                const focusClientName = command.split(" ")[2]
+                this.setFocusedClient(focusClientName)
+                this.askCommand()
+                break;
+
+            case command.match(/^(clients rename (.*) (.*))$/)?.input:
+                const oldName = command.split(" ")[2]
+                const newName = command.split(" ")[3]
+                this.changeClientName(oldName, newName)
+                this.askCommand()
+                break;
+
             case command.match(/^(config set port) ([0-9])*$/)?.input:
                 const port = command.split(" ")[3]
                 try {
@@ -212,7 +352,7 @@ export class CLI {
                 this.askCommand()
                 break;
 
-            case command.match(/^(config get port)$/)?.input:
+            case "config get port":
                 console.log(chalk.green(`Server is running on port: ${this.getServerPort()}`))
                 this.askCommand()
                 break;
@@ -223,7 +363,7 @@ export class CLI {
                 this.askCommand()
                 break;
 
-            case command.match(/^(config get debug)$/)?.input:
+            case "config get debug":
                 const currentDebugModeValue = this.getDebugMode()
                 if (currentDebugModeValue) {
                     console.log("Debug mode is enabled !")
@@ -237,9 +377,9 @@ export class CLI {
                 const rsa = command.split(" ")[3]
                 try {
                     const rsaLength = Number.parseInt(rsa)
-                    if(4096 % rsaLength !== 0){
+                    if (4096 % rsaLength !== 0) {
                         console.log(chalk.red("RSA length value should be a divider of 4096 !"))
-                    }else{
+                    } else {
                         this.setRsaLength(rsaLength)
                     }
                 } catch (err) {
@@ -248,7 +388,7 @@ export class CLI {
                 this.askCommand()
                 break;
 
-            case command.match(/^(config get rsa_length)$/)?.input:
+            case "config get rsa_length":
                 console.log(chalk.green(`Rsa length: ${this.getRsaLength()}`))
                 this.askCommand()
                 break;

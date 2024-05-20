@@ -109,6 +109,9 @@ export class Client {
         ? RSA.decrypt(message.content, this.keys.privateKey)
         : message.content;
       LogHelper.info('Received from server: ' + decryptedMessage);
+      if(decryptedMessage === "ping"){
+        this.sendMessage("pong", this.socket)
+      }
     }
   }
 

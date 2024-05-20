@@ -17,6 +17,11 @@ npm install
 
 ## Usage
 
+Lancement du CLI
+```
+npm run cli
+```
+
 Lancement du server:
 ```
 npm run server
@@ -25,4 +30,36 @@ npm run server
 Lancement d'un client:
 ```
 npm run client
+```
+
+### CLI commands
+
+#### Server
+Lancement du server
+```
+[Bamboo]$> server start
+```
+
+Redemarrage du server
+```
+[Bamboo]$> server restart
+```
+
+Cloture du server
+```
+[Bamboo]$> server stop
+```
+
+#### Config
+
+##### Port
+
+Recuperation du port du server
+```
+[Bamboo]$> config get port
+```
+
+Changement du port du server
+```
+[Bamboo]$> config set port <PORT>
 ```

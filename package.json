@@ -7,6 +7,7 @@
     "client": "nodemon  --watch 'src/**/*.ts' --exec \"npx tsx ./src/client.ts\"",
     "server": "nodemon  --watch 'src/**/*.ts' --exec \"npx tsx ./src/server.ts\"",
     "dev": "npx tsx ./src/index.ts",
+    "cli": "npx tsx ./src/index.ts",
     "test": "npx tsx ./src/test/test.ts",
     "prepare": "husky"
   },

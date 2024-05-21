@@ -4,6 +4,7 @@ import { RSAKeysType, RSAPublicKeyType } from "../types/rsaTypes";
 import { MessageType } from "../types/messageTypes";
 import { LogHelper } from "./log";
 import { config } from "../config/config";
+import readline from "readline";
 const { generateRSAKeys } = RSA;
 
 type ClientType = { name: string, socket: Socket, publicKey: RSAPublicKeyType, connectionDate: Date }
@@ -13,7 +14,7 @@ export class MainServer {
     private clients: ClientType[];
     private server: Server;
     private port: number;
-    private focusedClient: ClientType;
+    private focusedClient: ClientType | null = null;
     private totalConnection = 0;
 
     constructor(clients: ClientType[] = [], port: number = config.serverPort) {
@@ -23,7 +24,7 @@ export class MainServer {
         this.RSAKeys = generateRSAKeys(config.serverRSAPrimeBitLength);
 
         this.server = createServer((sock: Socket) => this.onClientConnection(sock));
-        // this.handleConsoleMessage();
+        
     }
 
     private onClientConnection = (sock: Socket) => {
@@ -50,13 +51,13 @@ export class MainServer {
     }
 
     public start = (): boolean => {
-        try{
+        try {
             this.server.listen(this.port, () => {
                 LogHelper.info(`Server started on port ${this.port}`);
             });
-            return true
-        }catch(err){
-            return false
+            return true;
+        } catch (err) {
+            return false;
         }
     }
 
@@ -73,16 +74,13 @@ export class MainServer {
             let clearMessage: string;
             if (!message.encrypted) {
                 clearMessage = message.content;
-                // this.sendMessage(`Non encrypted data received!`, sock);
             } else {
                 clearMessage = RSA.decrypt(message.content, this.RSAKeys.privateKey);
-                // this.sendMessage(`Encrypted data received!`, sock);
             }
 
-            if(clearMessage === "pong"){
-                LogHelper.info("Received: Pong")
+            if (clearMessage === "pong") {
+                LogHelper.info("Received: Pong");
             }
-            LogHelper.info(`>> data received: ${clearMessage}`);
         }
     }
 
@@ -118,11 +116,14 @@ export class MainServer {
     }
 
     public sendMessageToFocused = (message: string) => {
-        this.sendMessage(message, this.getFocusedClient().socket)
+        if (this.focusedClient) {
+            this.sendMessage(message, this.focusedClient.socket);
+        } else {
+            LogHelper.error("No focused client.");
+        }
     }
 
     private handleConsoleMessage = () => {
-        // TODO gerer a quel client on envois le message
         process.stdin.on('data', (data) => {
             const message = data.toString().trim();
             if (this.clients.length > 0) {
@@ -142,24 +143,23 @@ export class MainServer {
     }
 
     public close = (): boolean => {
-        try{
+        try {
             for (let i = 0; i < this.clients.length; i++) {
                 const client = this.clients[i];
                 client.socket.end();
             }
             this.server.close(() => {
-                LogHelper.success('Server closed successfully ');
+                LogHelper.success('Server closed successfully');
                 return true;
-            })
-            return true
-            
-        }catch(err) {
+            });
+            return true;
+        } catch (err) {
             return false;
         }
     }
 
     public restart = () => {
-        try{
+        try {
             for (let i = 0; i < this.clients.length; i++) {
                 const client = this.clients[i];
                 client.socket.end();
@@ -169,16 +169,17 @@ export class MainServer {
                 const newServer = new MainServer(this.clients, this.port);
                 newServer.start();
                 this.updateProperties(newServer);
-                LogHelper.success('Server restarted successfully !')
-                return true
-            })
-            return true
-        }catch(err){
-            return false
+                LogHelper.success('Server restarted successfully !');
+                return true;
+            });
+            return true;
+        } catch (err) {
+            return false;
         }
     }
+
     getClients = (): ClientType[] => {
-        return this.clients
+        return this.clients;
     }
 
     removeClient = (socket: Socket) => {
@@ -186,48 +187,48 @@ export class MainServer {
     }
 
     setClientName = (currentName: string, newName: string): boolean => {
-        if(this.clients.filter((client => client.name === newName)).length !== 0){
-            return false
+        if (this.clients.filter((client => client.name === newName)).length !== 0) {
+            return false;
         }
         for (let i = 0; i < this.clients.length; i++) {
             const client = this.clients[i];
-            if(client.name === currentName){
-                client.name = newName
-                return true
+            if (client.name === currentName) {
+                client.name = newName;
+                return true;
             }
         }
-        return false
+        return false;
     }
 
     addClient = (socket: Socket, publicKey: RSAPublicKeyType) => {
-        this.totalConnection +=1;
+        this.totalConnection += 1;
         this.clients.push({ name: `client-${this.totalConnection}`, socket: socket, publicKey: publicKey, connectionDate: new Date() });
     }
 
     setFocusedClient = (clientName?: string) => {
-        let client: ClientType;
-        client = this.clients.find(client => client.name === clientName)
-        if(client){
+        let client: ClientType | undefined;
+        client = this.clients.find(client => client.name === clientName);
+        if (client) {
             this.focusedClient = client;
-            return true
-        }else{
-            this.focusedClient;
-            return true
+            return true;
+        } else {
+            this.focusedClient = null;
+            return true;
         }
     }
 
     sendPing = (clientName: string) => {
         let client: ClientType;
-        client = this.clients.find(client => client.name === clientName)
-        if(client){
-            this.sendMessage("ping", client.socket)
-            return true
-        }else{
-            return false
+        client = this.clients.find(client => client.name === clientName);
+        if (client) {
+            this.sendMessage("ping", client.socket);
+            return true;
+        } else {
+            return false;
         }
     }
 
-    getFocusedClient = (): ClientType => {
+    getFocusedClient = (): ClientType | null => {
         return this.focusedClient;
     }
 
@@ -237,5 +238,10 @@ export class MainServer {
 
     getPort = (): number => {
         return this.port;
-    } 
+    }
+
+    getPrivateKey = () => {
+        return this.RSAKeys.privateKey
+    }
+
 }

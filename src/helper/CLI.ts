@@ -4,6 +4,8 @@ import chalk from "chalk";
 import chalkAnimation from "chalk-animation"
 import inquirer from "inquirer"
 import { createSpinner } from "nanospinner";
+import { MessageType } from "../types/messageTypes";
+import { RSA } from "../lib/rsa";
 
 const sleep = (ms = config.sleepTime) => new Promise((r) => setTimeout(r, ms))
 
@@ -62,7 +64,6 @@ export class CLI {
             return true
         }
     }
-
 
     private setServerPort = (port: number) => {
         const spinner = createSpinner("Changing port...").start()
@@ -178,22 +179,87 @@ export class CLI {
     }
 
     private ping = (clientName: string) => {
-        if(!this.server){
+        if (!this.server) {
             console.log("Server is not running !")
             return
         }
         const response = this.server.sendPing(clientName);
-        if(!response){
+        if (!response) {
             console.log("Can't send ping, maybe this client doesn't exists !")
             return;
         }
-        console.log("Ping sended !")
+        console.log("Ping sent !")
+    }
+
+    private interactWithFocused = async () => {
+        if (!this.server) {
+            console.log("Server is not running !")
+            return
+        }
+        const focusedClient = this.server.getFocusedClient();
+        if (!focusedClient) {
+            console.log("No client is focused !")
+            return
+        }
+        this.server.sendMessageToFocused("interact")
+        console.log(`Entering interactive mode with ${focusedClient.name}. Type 'exit' to leave.`)
+        await this.interactiveMode();
+    }
+
+    private interactiveMode = async () => {
+        const focusedClient = this.server.getFocusedClient();
+        if (!focusedClient) {
+            console.log("No client is focused !")
+            return
+        }
+        while (true) {
+            const answers = await inquirer.prompt({
+                name: "user_command",
+                type: "input",
+                message: chalk.green(`[${focusedClient.name}]$ `),
+                validate: (value: string) => (value.trim() !== "")?true:"Entrez une commande."
+            });
+
+            const command: string = answers.user_command.trim();
+            if (command.toLowerCase() === 'exit') {
+                console.log(`Exiting interactive mode with ${focusedClient.name}.`)
+                break;
+            }
+
+            this.server.sendMessageToFocused(command);
+
+            // Wait for the response from the client
+            await this.waitForResponse();
+        }
+    }
+
+    private waitForResponse = (): Promise<void> => {
+        return new Promise((resolve) => {
+            const focusedClient = this.server.getFocusedClient();
+            if (!focusedClient) {
+                resolve();
+                return;
+            }
+
+            const handleData = (data: Buffer) => {
+                const message = data.toString();
+                const json: MessageType = JSON.parse(message)
+                let clearMessage = json.content
+                if(json.encrypted){
+                    clearMessage = RSA.decrypt(json.content, this.server.getPrivateKey())
+                }
+                console.log(chalk.blue(clearMessage));
+                resolve();
+            };
+
+            focusedClient.socket.once('data', handleData);
+        });
     }
 
     public startCLI = async () => {
-        let welcomText = chalkAnimation.pulse(chalk.green("Welcome to bamboo CLI !"));
+        let welcomeText = chalkAnimation.pulse(chalk.green("Welcome to bamboo CLI !"));
         await sleep()
-        welcomText.stop();
+        welcomeText.stop();
 
         this.askCommand()
     }
@@ -229,12 +295,11 @@ export class CLI {
 
         // ping
         else if (/^(ping(.*))$/.test(input)) {
-            if (/^(ping (.*))$/.test(input)){
+            if (/^(ping (.*))$/.test(input)) {
                 return true
-            } 
+            }
             return "Usage: \n- ping <CLIENT_NAME>"
         }
-
         // config
         else if (/^(config)(.*)?$/.test(input)) {
             // port config
@@ -258,7 +323,7 @@ export class CLI {
             }
 
             // rsa_length
-            if (/^(config set rsa_length)(.*)$/.test(input)) {
+            else if (/^(config set rsa_length)(.*)$/.test(input)) {
                 if (/^(config set rsa_length) ([0-9]{1,})$/.test(input)) {
                     return true
                 }
@@ -272,7 +337,6 @@ export class CLI {
             return "Command not found !"
         }
     }
-
 
     private askCommand = async () => {
         const answers = await inquirer.prompt({
@@ -326,6 +390,11 @@ export class CLI {
             case "clients unfocus":
                 this.setFocusedClient();
                 this.askCommand()
+                break;
+
+            case "clients interact":
+                await this.interactWithFocused();
+                this.askCommand();
                 break;
 
             case command.match(/^(clients focus (.*))$/)?.input:

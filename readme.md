@@ -72,6 +72,11 @@ Tester la connexion avec un client:
 [Bamboo]$> ping <CLIENT_NAME>
 ```
 
+Interragir avec le client focused:
+```
+[Bamboo]$> clients interact
+```
+
 #### Config
 
 ##### Port
